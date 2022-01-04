@@ -1,0 +1,25 @@
+# depslib dependency file v1.0
+1641221837 source:c:\users\lenovo\desktop\dpll2\main.cpp
+	<fstream>
+	<list>
+	"Clause.h"
+	<map>
+	<cstdlib>
+	"Formula.h"
+
+1641200565 c:\users\lenovo\desktop\dpll2\include\clause.h
+	<list>
+
+1641200567 source:c:\users\lenovo\desktop\dpll2\src\clause.cpp
+	"Clause.h"
+	<list>
+
+1641206113 c:\users\lenovo\desktop\dpll2\include\formula.h
+	"Clause.h"
+	<map>
+
+1641205905 source:c:\users\lenovo\desktop\dpll2\src\formula.cpp
+	<fstream>
+	"Formula.h"
+	"Clause.h"
+
