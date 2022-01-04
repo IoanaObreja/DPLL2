@@ -49,7 +49,7 @@ void print_formula(Formula formula) {
 }
 
 int find_unit_clause(Formula formula) {
-
+    /// search for a clause that only has one literal
     for(auto& clause: formula.clauses)
         if(clause.flag == 0 && clause.nr_literals - clause.nr_literals_false == 1)
             for(auto& lit: clause.lst) {
@@ -60,6 +60,8 @@ int find_unit_clause(Formula formula) {
 }
 
 int find_pure_literal(Formula formula) {
+    /// search in var_app for a literal
+    /// that only appears as positive or negated
     for(int i=1;i<=variables;i++) {
         if(formula.var_app[i] > 0 && formula.var_app[(-1)*i] == 0)
             return i;
@@ -72,8 +74,8 @@ int find_pure_literal(Formula formula) {
 
 void unit_propagate(Formula &formula, int unit_literal, int changes) {
     /// search for the literal in each clause
-    /// delete clauses that contain the literal
-    /// delete the negated literal
+    /// mark as sat clauses that contain the literal
+    /// mark as unsat the negated literal
     formula.var_app[unit_literal] = 0;
     formula.var_app[(-1)*unit_literal] = 0;
 
@@ -99,7 +101,7 @@ void unit_propagate(Formula &formula, int unit_literal, int changes) {
 }
 
 void pure_literal(Formula &formula, int pure_lit, int changes) {
-    /// delete clauses that contain the literal
+    /// mark as sat clauses that contain the literal
     formula.var_app[pure_lit] = 0;
     for(auto& clause: formula.clauses) {
         if(clause.flag == 0)
@@ -118,6 +120,7 @@ void pure_literal(Formula &formula, int pure_lit, int changes) {
 }
 
 bool empty_clause (Formula formula) {
+    
     for(auto& clause: formula.clauses) {
         if(clause.flag == 0 && clause.nr_literals == clause.nr_literals_false)
             return true;
@@ -126,6 +129,7 @@ bool empty_clause (Formula formula) {
 }
 
 bool empty_formula(Formula formula) {
+    
     for(auto& clause: formula.clauses)
         if(clause.flag == 0)
             return false;
@@ -176,7 +180,9 @@ void print_assignment(list<int> assignment) {
 }
 
 void revert (Formula &formula, list<int> assignment,int level) {
-
+    
+    /// change all flags that were marked at that level back to 0
+    /// update var_app and nr_literals_false
     for(auto& clause:formula.clauses) {
         for(auto& l: clause.lst)
             if(l.flag == level || l.flag == level*(-1)) {
@@ -194,6 +200,7 @@ bool dpll (Formula formula, list<int> assignment, int level) {
 
     int lit = 0;
 
+    /// unit propagation as long as possible
     while(lit = find_unit_clause(formula)) {
 
         assignment.push_back(lit);
@@ -207,6 +214,7 @@ bool dpll (Formula formula, list<int> assignment, int level) {
             return false;
     }
 
+    /// pure literal as long as possible
     while(lit = find_pure_literal(formula)) {
 
         assignment.push_back(lit);
@@ -225,11 +233,17 @@ bool dpll (Formula formula, list<int> assignment, int level) {
         print_assignment(assignment);
         return true;
     }
-
+    
 
     lit = find_most_popular_lit(formula);
     //lit = find_first_lit(formula);
     //g<<lit<<'\n';
+    
+    /// check if sat when this literal if marked as true
+    /// calling dpll on he formula to which was added the clause 
+    /// that only contains that literal
+    /// level gets incremented
+    /// if not sat on that branch, backtrack and check with the negated literal
 
     literal l;
     l.name = lit;
@@ -256,28 +270,6 @@ bool dpll (Formula formula, list<int> assignment, int level) {
     formula.clauses.pop_back();
     revert(formula,assignment,level+1);
 
-    /*
-    formula = unit_propagate(formula,lit,level+1);
-    //g<<"Split on: "<<lit<<'\n';
-    //print_formula(formula);
-    //g<<"var app: ";
-    //for(int i=0;i<=variables;i++)
-    //        g<<i<<' '<<var_app[i]<<' '<<var_app[(-1)*i]<<'\n';
-    if(dpll(formula,assignment,level+1))
-        return true;
-    formula = revert(formula,assignment,level+1);
-
-    formula = unit_propagate(formula,lit*(-1),level+1);
-    //g<<"Split on: "<<lit*(-1)<<'\n';
-    //print_formula(formula);
-    //g<<"var app: ";
-    //    for(int i=0;i<=variables;i++)
-    //        g<<i<<' '<<var_app[i]<<' '<<var_app[(-1)*i]<<'\n';
-    if(dpll(formula,assignment,level+1))
-        return true;
-    formula = revert(formula,assignment,level+1);
-
-    */
     return false;
 }
 
@@ -287,25 +279,8 @@ int main()
     read(variables, clauses, formula);
     //print_formula(formula);
     int nr = 0;
-    if(!dpll(formula,{},1)) g<<"UNSAT\n";
+    if(!dpll(formula,{},1)) 
+        g<<"UNSAT\n";
 
-    /*
-    int level = 1;
-    print_formula(formula);
-    for(int i=0;i<=variables;i++)
-        g<<i<<' '<<formula.var_app[i]<<' '<<formula.var_app[(-1)*i]<<'\n';
-    g<<'\n';
-    unit_propagate(formula, 1, 1);
-    print_formula(formula);
-    for(int i=0;i<=variables;i++)
-        g<<i<<' '<<formula.var_app[i]<<' '<<formula.var_app[(-1)*i]<<'\n';
-    g<<'\n';
-    revert(formula,{},1);
-    print_formula(formula);
-    g<<'\n';
-    for(int i=0;i<=variables;i++)
-        g<<i<<' '<<formula.var_app[i]<<' '<<formula.var_app[(-1)*i]<<'\n';
-
-    */
     return 0;
 }
